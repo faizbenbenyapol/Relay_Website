@@ -41,7 +41,10 @@
           <input type="file" id="fileInput" multiple hidden />
         </div>
         <!-- รหัส 6 หลักจะแสดงที่นี่หลังเลือกไฟล์ -->
-        <div class="code-display hidden" id="codeDisplay">- - - - - -</div>
+        <div class="code-wrapper hidden" id="codeWrapper">
+          <div class="code-display" id="codeDisplay">- - - - - -</div>
+          <button class="btn-copy" id="copyCodeBtn">คัดลอกรหัส</button>
+        </div>
         <p class="status-line" id="sendStatus"></p>
       </section>
 

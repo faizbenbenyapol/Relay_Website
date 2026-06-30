@@ -257,12 +257,18 @@ main {
 .dz-sub { font-size: 13px; color: var(--gray); }
 
 /* รหัส 6 หลักใหญ่ๆ ตัวหนา + เรือง */
+.code-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 18px 0;
+}
 .code-display {
   font-family: var(--mono);
   font-size: 56px;
   font-weight: 700;
   letter-spacing: 0.12em;
-  margin: 18px 0;
+  margin: 0 0 14px 0;
   line-height: 1;
   color: var(--accent);
   text-shadow: 0 0 10px var(--glow-md), 0 0 30px var(--glow);
@@ -270,6 +276,32 @@ main {
 }
 .code-display.show-code {
   animation: codePulse 3s ease-in-out infinite;
+}
+.btn-copy {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.btn-copy:hover {
+  background: var(--accent);
+  color: var(--black);
+  box-shadow: 0 0 12px var(--glow-md);
+}
+.btn-copy:active {
+  transform: scale(0.95);
+}
+.btn-copy.copied {
+  border-color: #44ff44;
+  color: #44ff44;
+  box-shadow: 0 0 12px rgba(68, 255, 68, 0.4);
 }
 .status-line {
   font-size: 13px;
@@ -516,4 +548,18 @@ main {
   .stats-row { grid-template-columns: 1fr; gap: 18px; }
   .site-footer { padding: 24px 20px; }
   .overlay-card { padding: 28px 20px; }
+}
+
+/* เพิ่มการรองรับหน้าจอมือถือขนาดเล็กมากเป็นพิเศษ */
+@media (max-width: 420px) {
+  .brand-meta { display: none; } /* ซ่อนคำอธิบาย header เพื่อไม่ให้ล้นและบีบเบียด */
+}
+
+@media (max-width: 380px) {
+  .code-row { gap: 6px; } /* ลดระยะห่างของกล่องกรอกรหัส */
+  .code-digit { width: 34px; height: 48px; font-size: 18px; } /* ย่อขนาดกล่องกรอกรหัสให้พอดียิ่งขึ้น */
+}
+
+@media (max-width: 360px) {
+  .code-display { font-size: 32px; } /* ลดขนาดรหัส 6 หลักฝั่งผู้ส่งเพื่อให้ไม่เกิด scrollbar แนวนอน */
 }

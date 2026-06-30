@@ -22,7 +22,9 @@ const $ = (id) => document.getElementById(id);
 // ฝั่งส่ง
 const sendZone = $('sendZone');
 const fileInput = $('fileInput');
+const codeWrapper = $('codeWrapper');
 const codeDisplay = $('codeDisplay');
+const copyCodeBtn = $('copyCodeBtn');
 const sendStatus = $('sendStatus');
 // ฝั่งรับ
 const codeInputs = Array.from(document.querySelectorAll('.code-digit'));
@@ -90,7 +92,7 @@ function startSending(files) {
 socket.on('room:created', ({ code: c }) => {
   code = c;
   codeDisplay.textContent = c.split('').join(' '); // แสดงหลายๆ ตัวเว้นช่อง
-  codeDisplay.classList.remove('hidden');
+  codeWrapper.classList.remove('hidden');
   codeDisplay.classList.add('show-code'); // animation
   
   const fileText = pendingFiles.length === 1 
@@ -282,11 +284,27 @@ $('closeTransfer')?.addEventListener('click', () => {
   peer = null;
   if (role === 'sender') {
     sendStatus.textContent = '';
-    codeDisplay.classList.add('hidden');
+    codeWrapper.classList.add('hidden');
   } else {
     receiveStatus.textContent = '';
     codeInputs.forEach(i => i.value = '');
   }
+});
+
+// ---- คัดลอกรหัส 6 หลัก ----
+copyCodeBtn.addEventListener('click', () => {
+  if (!code) return;
+  navigator.clipboard.writeText(code).then(() => {
+    const originalText = copyCodeBtn.textContent;
+    copyCodeBtn.textContent = 'คัดลอกแล้ว!';
+    copyCodeBtn.classList.add('copied');
+    setTimeout(() => {
+      copyCodeBtn.textContent = originalText;
+      copyCodeBtn.classList.remove('copied');
+    }, 2000);
+  }).catch(err => {
+    console.error('Failed to copy code:', err);
+  });
 });
 
 // ---- ทำความสะอาดตอนปิดหน้าเว็บ ----
