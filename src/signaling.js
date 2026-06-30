@@ -60,9 +60,9 @@ function setupSignaling(io) {
     socket.on('room:join', ({ code }) => {
       const c = String(code || '').trim();
 
-      // เคลียร์ห้องเดิมหาก client นี้เคยสร้าง/เข้าร่วมห้องอื่นค้างไว้ก่อนหน้า
+      // เคลียร์ห้องเดิมหาก client นี้เคยสร้าง/เข้าร่วมห้องอื่นค้างไว้ก่อนหน้า (ยกเว้นเป็นห้องเดียวกัน)
       const old = socketToCode.get(socket.id);
-      if (old) teardownRoom(old, 'recreate');
+      if (old && old !== c) teardownRoom(old, 'recreate');
 
       const room = rooms.get(c);
       if (!room) return socket.emit('room:error', { message: 'ไม่พบรหัสนี้ อาจหมดอายุหรือผู้ส่งปิดหน้าเว็บแล้ว' });
