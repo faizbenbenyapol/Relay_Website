@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relay — ส่งไฟล์ข้ามอุปกรณ์แบบ P2P</title>
+  <meta name="description" content="ส่งไฟล์ข้ามอุปกรณ์โดยตรง ไม่จำกัดขนาด ไม่ต้องสมัครสมาชิก" />
+
+  <!-- ฟอนต์: Inter (UI) + JetBrains Mono (stats/code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- ==================== Header ==================== -->
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span>RELAY</span>
+    </div>
+    <div class="brand-meta">P2P · ENCRYPTED · NO SIGNUP</div>
+  </header>
+
+  <!-- ==================== Main ==================== -->
+  <main>
+    <p class="hero-tag">PEER-TO-PEER FILE TRANSFER</p>
+    <h1 class="hero-title">ส่งไฟล์ข้ามอุปกรณ์<br /><span class="hl">โดยตรง</span> ไม่จำกัดขนาด</h1>
+    <p class="hero-sub">ไฟล์ถูกส่งตรงจากอุปกรณ์คุณไปยังปลายทางผ่าน WebRTC แบบเข้ารหัสตั้งต้นถึงปลายทาง ไม่ผ่านเซิร์ฟเวอร์ — รวดเร็ว เป็นส่วนตัว ไม่ต้องสมัครสมาชิก</p>
+
+    <!-- กริด 2 ฝั่ง -->
+    <div class="panel-grid">
+      <!-- ===== ฝั่งส่ง ===== -->
+      <section class="panel">
+        <p class="panel-label">01 — ส่งไฟล์</p>
+        <div class="dropzone" id="sendZone">
+          <div class="dz-icon"></div>
+          <p class="dz-title">ลากไฟล์มาวางที่นี่</p>
+          <p class="dz-sub">หรือคลิกเพื่อเลือกไฟล์ · ไม่จำกัดขนาด</p>
+          <input type="file" id="fileInput" multiple hidden />
+        </div>
+        <!-- รหัส 6 หลักจะแสดงที่นี่หลังเลือกไฟล์ -->
+        <div class="code-display hidden" id="codeDisplay">- - - - - -</div>
+        <p class="status-line" id="sendStatus"></p>
+      </section>
+
+      <!-- ===== ฝั่งรับ ===== -->
+      <section class="panel">
+        <p class="panel-label">02 — รับไฟล์</p>
+        <div class="code-row">
+          <input class="code-digit" type="text" inputmode="numeric" maxlength="1" aria-label="หลักที่ 1" />
+          <input class="code-digit" type="text" inputmode="numeric" maxlength="1" aria-label="หลักที่ 2" />
+          <input class="code-digit" type="text" inputmode="numeric" maxlength="1" aria-label="หลักที่ 3" />
+          <input class="code-digit" type="text" inputmode="numeric" maxlength="1" aria-label="หลักที่ 4" />
+          <input class="code-digit" type="text" inputmode="numeric" maxlength="1" aria-label="หลักที่ 5" />
+          <input class="code-digit" type="text" inputmode="numeric" maxlength="1" aria-label="หลักที่ 6" />
+        </div>
+        <button class="btn btn-block" id="receiveBtn">รับไฟล์</button>
+        <p class="status-line" id="receiveStatus"></p>
+      </section>
+    </div>
+  </main>
+
+  <!-- ==================== Transfer Overlay ==================== -->
+  <div class="overlay hidden" id="transferOverlay">
+    <div class="overlay-card">
+      <button class="ov-close" id="closeTransfer">ปิด</button>
+      <p class="ov-label" id="ovLabel">กำลังส่งไฟล์</p>
+      <p class="ov-filename" id="tFileName">—</p>
+      <p class="ov-filesize"><span id="tFileSize">0 B</span></p>
+
+      <!-- progress bar เส้นเหลืองเรือง -->
+      <div class="progress-track">
+        <div class="progress-bar" id="tProgress"></div>
+      </div>
+      <div class="progress-meta">
+        <span><span id="tSent">0 B</span> / <span id="tTotal">0 B</span></span>
+        <span class="pct" id="tProgressPct">0%</span>
+      </div>
+
+      <div class="speed-line">
+        <span class="lbl">ความเร็ว</span>
+        <span class="val" id="tSpeed">0.0 MB/s</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Footer: Global Stats ==================== -->
+  <footer class="site-footer">
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="stat-label">ไฟล์ที่ส่งสำเร็จ</span>
+        <span class="stat-value" id="statFiles">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">ปริมาณข้อมูลทั้งหมด</span>
+        <span class="stat-value" id="statData">0 B</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">การเชื่อมต่อสำเร็จ</span>
+        <span class="stat-value" id="statTransfers">0</span>
+      </div>
+    </div>
+    <p class="footer-note"><span class="hl">RELAY.BENYAPOL.ONLINE</span> — STATISTICS UPDATED IN REAL-TIME · FILES NEVER TOUCH THE SERVER</p>
+  </footer>
+
+  <!-- Socket.io client (served by server) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/webrtc.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/stats.js"></script>
+</body>
+</html>
