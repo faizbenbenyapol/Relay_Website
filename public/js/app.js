@@ -79,7 +79,11 @@ function startSending(files) {
   role = 'sender';
   pendingFiles = files; // ตั้งก่อน emit — กัน race condition
   socket.emit('room:create'); // ขอรหัส 6 หลักจาก server
-  sendStatus.textContent = 'กำลังสร้างรหัส...';
+  
+  const fileText = files.length === 1 
+    ? `ไฟล์ "${files[0].name}" (${formatBytes(files[0].size)})`
+    : `${files.length} ไฟล์ (รวม ${formatBytes(files.reduce((a, b) => a + b.size, 0))})`;
+  sendStatus.textContent = `เลือก ${fileText} · กำลังสร้างรหัส...`;
 }
 
 // ผู้ส่ง: server ส่งรหัส 6 หลักกลับมา
@@ -88,7 +92,11 @@ socket.on('room:created', ({ code: c }) => {
   codeDisplay.textContent = c.split('').join(' '); // แสดงหลายๆ ตัวเว้นช่อง
   codeDisplay.classList.remove('hidden');
   codeDisplay.classList.add('show-code'); // animation
-  sendStatus.textContent = 'รอผู้รับกรอกรหัสนี้บนอุปกรณ์อื่น...';
+  
+  const fileText = pendingFiles.length === 1 
+    ? `ไฟล์ "${pendingFiles[0].name}"`
+    : `${pendingFiles.length} ไฟล์`;
+  sendStatus.textContent = `เลือก ${fileText} · รอผู้รับกรอกรหัสนี้บนอุปกรณ์อื่น...`;
 });
 
 // ====================================================================

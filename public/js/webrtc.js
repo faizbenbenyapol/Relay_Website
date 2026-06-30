@@ -19,6 +19,8 @@ const BUFFER_LOW = 256 * 1024;         // ส่งต่อเมื่อ buff
 function createSender(signalingSend, hooks = {}) {
   const pc = new RTCPeerConnection(RTC_CONFIG);
   let dc; // DataChannel
+  let filesCount = 0;
+  let totalBytesSent = 0;
 
   pc.onconnectionstatechange = () => {
     if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
@@ -48,8 +50,18 @@ function createSender(signalingSend, hooks = {}) {
       dc.binaryType = 'arraybuffer';
       dc.bufferedAmountLowThreshold = BUFFER_LOW;
 
-      // สำคัญ: เริ่มส่งไฟล์ทันทีที่ datachannel เปิด
+      // สำคัญ: เริ่มส่งไฟล์เมื่อ datachannel เปิด
       dc.onopen = () => hooks.onReady?.();
+      
+      // ดักฟังข้อความตอบกลับจากผู้รับเมื่อได้รับไฟล์ครบถ้วนแล้ว
+      dc.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'ack') {
+            hooks.onDone?.({ files: filesCount, bytes: totalBytesSent });
+          }
+        } catch (err) {}
+      };
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
@@ -69,6 +81,8 @@ function createSender(signalingSend, hooks = {}) {
     }
 
     const totalSize = files.reduce((s, f) => s + f.size, 0);
+    filesCount = files.length;
+    totalBytesSent = totalSize;
     let sentBytes = 0;
     let lastTime = performance.now();
     let lastBytes = 0;
@@ -120,9 +134,8 @@ function createSender(signalingSend, hooks = {}) {
         dc.send(JSON.stringify({ type: 'file-end' }));
       }
 
-      // 4) ส่งเสร็จทั้งหมด
+      // 4) ส่งเสร็จทั้งหมด (ฝั่งส่งจะรอการยืนยัน ACK จากฝั่งรับทาง onmessage ก่อนจบจริง)
       dc.send(JSON.stringify({ type: 'done', files: files.length, bytes: totalSize }));
-      hooks.onDone?.({ files: files.length, bytes: totalSize });
     } catch (err) {
       hooks.onError?.('การส่งไฟล์ล้มเหลว: ' + err.message);
     }
@@ -188,6 +201,10 @@ function createReceiver(signalingSend, hooks = {}) {
         sink = null;
       } else if (msg.type === 'done') {
         finalize(false);
+        // ส่งข้อความ acknowledgment (ack) กลับไปยังฝั่งส่ง เพื่อยืนยันว่าฝั่งรับบันทึกไฟล์/สร้างไฟล์ลงดิสก์เสร็จสมบูรณ์แล้ว
+        try {
+          dc.send(JSON.stringify({ type: 'ack' }));
+        } catch (err) {}
         hooks.onDone?.(msg);
       }
       return;
@@ -245,7 +262,8 @@ function createReceiver(signalingSend, hooks = {}) {
     if (closedByPeer && current) {
       hooks.onError?.('การเชื่อมต่อขาดหาย ไฟล์ที่ได้รับอาจไม่สมบูรณ์');
     }
-    if (!closedByPeer && sink?._mem && chunks.length && current) {
+    // ใช้ chunks.length แทนการตรวจสอบ sink?._mem เนื่องจากในขั้นตอน file-end เรามีการตั้งค่า sink = null ไปแล้ว
+    if (!closedByPeer && chunks.length && current) {
       const blob = new Blob(chunks, { type: current.mime });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
